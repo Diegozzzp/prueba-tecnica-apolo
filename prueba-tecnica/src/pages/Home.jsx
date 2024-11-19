@@ -14,17 +14,16 @@ export default function Home() {
 
   // Verificar si el usuario está logueado, si no, redirigir al login
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    const user = localStorage.getItem("currentUser"); // Cambia 'user' a 'currentUser'
     if (!user) {
-      // Si no hay un usuario, redirigir al login
-      navigate("/login");
+      navigate("/login"); // Redirige al login si no hay usuario
     } else {
-      fetchCharacters();
+      fetchCharacters(); // Si está logueado, continúa con la carga de los personajes
     }
-
+  
     window.scrollTo({ top: 0, behavior: "smooth" }); // Subir al inicio de la página
   }, [currentPage, navigate]);
-
+  
   const fetchCharacters = async () => {
     setLoading(true);
     setError("");

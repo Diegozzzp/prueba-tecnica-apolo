@@ -1,13 +1,21 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Hook para navegación
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginRegister() {
   const [isLogin, setIsLogin] = useState(true); // Alternar entre login y registro
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [error, setError] = useState(""); // Manejo de errores
-  const navigate = useNavigate(); // Para redirigir al Home después del login exitoso
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  // Validaciones simples
+  // Verificar si el usuario ya está logueado
+  const checkIfLoggedIn = () => {
+    const currentUser = localStorage.getItem("currentUser");
+    if (currentUser) {
+      navigate("/home"); // Redirigir si ya hay un usuario logueado
+    }
+  };
+
+  // Validaciones del formulario
   const validateForm = () => {
     if (!formData.email || !formData.password) {
       setError("Todos los campos son obligatorios.");
@@ -15,6 +23,10 @@ export default function LoginRegister() {
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       setError("Correo no válido.");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.");
       return false;
     }
     return true;
@@ -27,12 +39,11 @@ export default function LoginRegister() {
       (u) => u.email === formData.email && u.password === formData.password
     );
     if (user) {
-      // Si el login es exitoso, redirigir al Home
-      localStorage.setItem("currentUser", JSON.stringify(user)); // Guardamos al usuario logueado
-      navigate("/home"); // Redirigir
-      return;
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      navigate("/home");
+    } else {
+      setError("Credenciales incorrectas.");
     }
-    setError("Credenciales incorrectas.");
   };
 
   // Manejar Registro
@@ -42,29 +53,32 @@ export default function LoginRegister() {
       setError("El usuario ya está registrado.");
       return;
     }
-    // Si no está registrado, lo agregamos
     users.push(formData);
-    localStorage.setItem("users", JSON.stringify(users)); // Guardamos en localStorage
-    setError(""); // Limpiar errores
-    setIsLogin(true); // Cambiar a login
+    localStorage.setItem("users", JSON.stringify(users));
+    setError("");
+    setIsLogin(true);
   };
 
-  // Manejar el envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     if (isLogin) {
-      handleLogin(); // Si estamos en login
+      handleLogin();
     } else {
-      handleRegister(); // Si estamos en registro
+      handleRegister();
     }
   };
 
+  // Verificar si ya está logueado al montar el componente
+  useEffect(() => {
+    checkIfLoggedIn();
+  }, []);
+
   return (
     <div className="bg-gray-900 text-white min-h-screen flex justify-center items-center">
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-bold text-center mb-4">
+      <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-96">
+        <h2 className="text-3xl font-bold text-center mb-4">
           {isLogin ? "Iniciar Sesión" : "Registrar"}
         </h2>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
@@ -77,10 +91,9 @@ export default function LoginRegister() {
               type="email"
               name="email"
               value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="ejemplo@correo.com"
             />
           </div>
           <div className="mb-4">
@@ -91,10 +104,9 @@ export default function LoginRegister() {
               type="password"
               name="password"
               value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="w-full p-2 rounded bg-gray-700 text-white"
+              placeholder="********"
             />
           </div>
           <button
@@ -108,7 +120,7 @@ export default function LoginRegister() {
           <p
             className="text-blue-400 cursor-pointer"
             onClick={() => {
-              setIsLogin(!isLogin); // Alternar entre Login y Registro
+              setIsLogin(!isLogin);
               setError(""); // Limpiar errores
             }}
           >
